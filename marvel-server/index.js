@@ -13,24 +13,26 @@ app.get('/character', (req, res) => {
 })
 
 app.get('/character/:id', (req, res) => {
-  const data = characterData.filter(character => character.id === parseInt(req.params.id))
-  res.send(data)
+  const character = characterData.filter(character => character.id === parseInt(req.params.id))
+  res.send(character)
 })
 
 app.get('/search/character/name/:name', (req, res) => {
-    const foundCharacters = characterData.filter(character => character.name.toLowerCase().includes(req.params.name.toLowerCase()))
-    res.send(foundCharacters)
+    const characters = characterData.filter(character => character.name.toLowerCase().includes(req.params.name.toLowerCase()))
+    res.send(characters)
 })
 
-// app.get('/search/house/:house', (req, res) => {
-//     console.log(req.params)
-//     let foundCharacters = gotData.characters.filter((character)=> {
-//         if(!character.houseName) return false
-//         let houses = character.houseName.toString()
-//         return houses.toLowerCase().includes(req.params.name.toLowerCase())
-//     })
-//     res.send(foundCharacters)
-// })
+app.get('/search/event/:event', (req, res) => {
+    let characters = []
+    characterData.forEach(character => {
+      if(character.events.available !== 0){
+        character.events.items.forEach(event => {
+          if(event.name.toLowerCase().includes(req.params.event.toLowerCase())) characters.push(character)
+        });
+      }
+    });
+    res.send(characters)
+})
 
 
 // app.get('/character/:id', (req, res) => {
