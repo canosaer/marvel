@@ -1,3 +1,4 @@
+//Initialize
 const cors = require('cors')
 const express = require('express')
 
@@ -7,81 +8,96 @@ const port = 1337
 app.use(express.static('marvel-client'))
 app.use(cors())
 
-app.get('/character', (req, res) => {
-    console.log(req.params)
-    res.send(characterData)
-})
-
-app.get('/character/:id', (req, res) => {
-  const character = characterData.filter(character => character.id === parseInt(req.params.id))
-  res.send(character)
-})
-
-app.get('/search/character/name/:name', (req, res) => {
-    const characters = characterData.filter(character => character.name.toLowerCase().includes(req.params.name.toLowerCase()))
-    res.send(characters)
-})
-
-app.get('/search/event/:event', (req, res) => {
-    let characters = []
-    characterData.forEach(character => {
-      if(character.events.available !== 0){
-        character.events.items.forEach(event => {
-          if(event.name.toLowerCase().includes(req.params.event.toLowerCase())) characters.push(character)
-        });
-      }
-    });
-    res.send(characters)
-})
-
-
-// app.get('/character/:id', (req, res) => {
-//     console.log(req.params)
-//     res.send(gotData.characters[req.params.id])
-// })
-
-// app.get('/character/:id/sibling', (req, res) => {
-//     console.log(req.params)
-//     res.send(gotData.characters[req.params.id],siblings)
-// })
-
-// app.get('/character/:id/children', (req, res) => {
-//     console.log(req.params)
-//     res.send(gotData.characters[req.params.id].parentOf)
-// })
-
-// app.get('/character/:id/ally', (req, res) => {
-//     console.log(req.params)
-//     res.send(gotData.characters[req.params.id].parentOf)
-// })
-
-// app.get('/character/:id/ally/:allyID', (req, res) => {
-//     console.log(req.params)
-//     res.send(gotData.characters[req.params.id].parentOf)
-// })
-
-// app.post('/testing', (req, res) => {
-//     res.send('1...2...3...')
-// })
-
-
 app.listen(port, () => {
-    //function to clal when it gets start
   console.log(`marvel app listening on port ${port}`)
 })
 
+//Utilities
+const extractItemNames = (id, itemName) => {
+  const character = characterData.filter(character => character.id === parseInt(id))
+  let array = []
+  character[0][itemName].items.forEach(item => {
+    array.push(item.name)
+  });
+  return array
+}
 
+const findAssociatedCharacters = (query, itemName) =>{
+  let array = []
+  characterData.forEach(character => {
+    if(character[itemName].available !== 0){
+      character[itemName].items.forEach(item => {
+        if(item.name.toLowerCase().includes(query.toLowerCase()) && !array.includes(character)) array.push(character)
+      });
+    }
+  });
+  return array
+}
 
+//Retrieve all data
+app.get('/character', (req, res) => {
+  console.log(req.params)
+  res.send(characterData)
+})
 
+//Retrieve character by ID
+app.get('/character/:id', (req, res) => {
+  const character = characterData.filter(character => character.id === parseInt(req.params.id))
+  res.send(character[0])
+})
 
+//Retrieve items by character
+app.get('/character/:id/comic', (req, res) => {
+  const character = characterData.filter(character => character.id === parseInt(req.params.id))
+  const comicsLink = character[0].urls.filter(url => url.type === 'comiclink')
+  let comics = {}
+  if(extractItemNames(req.params.id, 'comics')[0]) comics.titles = extractItemNames(req.params.id, 'comics')
+  if(comicsLink[0].url) comics.url = comicsLink[0].url
+  res.send(comics)
+})
 
+app.get('/character/:id/detail', (req, res) => {
+  const character = characterData.filter(character => character.id === parseInt(req.params.id))
+  const detailLink = character[0].urls.filter(url => url.type === 'detail')
+  if(detailLink[0].url) res.send(detailLink[0].url)
+  else res.send(null)
+})
 
+app.get('/character/:id/series', (req, res) => {
+  res.send(extractItemNames(req.params.id, 'series'))
+})
 
+app.get('/character/:id/story', (req, res) => {
+  res.send(extractItemNames(req.params.id, 'stories'))
+})
 
+app.get('/character/:id/event', (req, res) => {
+  res.send(extractItemNames(req.params.id, 'events'))
+})
 
+//Search for characters by item name
+app.get('/search/character/:name', (req, res) => {
+  const characters = characterData.filter(character => character.name.toLowerCase().includes(req.params.name.toLowerCase()))
+  res.send(characters)
+})
 
+app.get('/search/comic/:comic', (req, res) => {
+  res.send(findAssociatedCharacters(req.params.comic, 'comics'))
+})
 
+app.get('/search/series/:series', (req, res) => {
+  res.send(findAssociatedCharacters(req.params.series, 'series'))
+})
 
+app.get('/search/story/:story', (req, res) => {
+  res.send(findAssociatedCharacters(req.params.story, 'stories'))
+})
+
+app.get('/search/event/:event', (req, res) => {
+  res.send(findAssociatedCharacters(req.params.event, 'events'))
+})
+
+//Data store
 const characterData = [
    {
      "id": 1011334,
