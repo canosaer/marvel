@@ -35,9 +35,12 @@ const findAssociatedCharacters = (query, itemName) =>{
 }
 
 //Retrieve all data
-app.get('/character', (req, res) => {
-  console.log(req.params)
+app.get(['/', '/character'], (req, res) => {
   res.send(characterData)
+})
+
+app.get(['/search-types'], (req, res) => {
+  res.send(searchTypes)
 })
 
 //Retrieve character by ID
@@ -98,6 +101,24 @@ app.get('/search/event/:event', (req, res) => {
 })
 
 //Data store
+const searchTypes = [
+  { name: 'Characters',
+    tag: 'character',
+  },
+  { name: 'Comics',
+    tag: 'comic',
+  },
+  { name: 'Events',
+    tag: 'event',
+  },
+  { name: 'Series',
+    tag: 'series',
+  },
+  { name: 'Stories',
+    tag: 'story',
+  },
+]
+
 const characterData = [
    {
      "id": 1011334,
